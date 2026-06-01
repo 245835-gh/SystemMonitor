@@ -1,0 +1,22 @@
+﻿# Visual Studio
+.vs/
+bin/
+obj/
+packages/
+*.exe
+*.dll
+*.pdb
+*.suo
+*.user
+*.cache
+*.vsidx
+
+# Build results
+Debug/
+Release/
+x64/
+x86/
+
+# Other
+Thumbs.db
+Desktop.ini

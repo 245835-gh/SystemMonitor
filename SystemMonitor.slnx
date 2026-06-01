@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SystemMonitor/SystemMonitor.csproj" Id="256552f1-6335-4c24-bc49-3e28a1f1cfa0" />
+  <Project Path="SystemMonitorProgrm/SystemMonitorProgrm.vdproj" Type="Installer">
+    <Build />
+  </Project>
+</Solution>
