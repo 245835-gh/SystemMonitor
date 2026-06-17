@@ -23,11 +23,11 @@ namespace SystemMonitor
 
         public void ApplyTheme()
         {
-            Color emeraldBg = Color.FromArgb(20, 35, 25);       
-            Color emeraldPanel = Color.FromArgb(30, 55, 40);    
-            Color emeraldControl = Color.FromArgb(40, 75, 55);  
-            Color emeraldText = Color.FromArgb(180, 255, 220);  
-            Color emeraldAccent = Color.FromArgb(80, 200, 120); 
+            Color emeraldBg = Color.FromArgb(20, 35, 25);
+            Color emeraldPanel = Color.FromArgb(30, 55, 40);
+            Color emeraldControl = Color.FromArgb(40, 75, 55);
+            Color emeraldText = Color.FromArgb(180, 255, 220);
+            Color emeraldAccent = Color.FromArgb(80, 200, 120);
 
             if (SettingsForm.ThemeMode == "Dark")
             {
@@ -101,7 +101,7 @@ namespace SystemMonitor
                 btnUninstall.ForeColor = Color.Black;
                 btnUninstall.FlatStyle = FlatStyle.Standard;
             }
-            else 
+            else
             {
                 this.BackColor = emeraldBg;
                 this.ForeColor = emeraldText;
@@ -233,22 +233,22 @@ namespace SystemMonitor
             {
                 switch (cmbSort.SelectedIndex)
                 {
-                    case 0: 
+                    case 0:
                         filtered = filtered.OrderBy(p => p.Name);
                         break;
-                    case 1: 
+                    case 1:
                         filtered = filtered.OrderByDescending(p => p.Name);
                         break;
-                    case 2: 
+                    case 2:
                         filtered = filtered.OrderByDescending(p => p.GetInstallDateAsDateTime());
                         break;
-                    case 3: 
+                    case 3:
                         filtered = filtered.OrderBy(p => p.GetInstallDateAsDateTime());
                         break;
-                    case 4: 
+                    case 4:
                         filtered = filtered.OrderBy(p => p.Version);
                         break;
-                    case 5: 
+                    case 5:
                         filtered = filtered.OrderBy(p => p.Publisher);
                         break;
                 }
@@ -274,7 +274,7 @@ namespace SystemMonitor
                 listBox1.Items.Add($"📦 {program.Name}");
                 listBox1.Items.Add($"   {dateStr}  |  Версія: {program.Version}");
                 listBox1.Items.Add($"   🏢 {program.Publisher}");
-                listBox1.Items.Add(""); 
+                listBox1.Items.Add("");
             }
         }
 
@@ -291,29 +291,35 @@ namespace SystemMonitor
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (listBox1.SelectedIndex >= 0)
+            if (listBox1.SelectedIndex < 0 || filteredPrograms == null) return;
+
+            string selected = listBox1.SelectedItem.ToString();
+            if (selected.StartsWith("📦"))
             {
-                string selected = listBox1.SelectedItem.ToString();
-
-                if (selected.StartsWith("📦"))
+                string programName = selected.Substring(2).Trim();
+                var program = filteredPrograms.FirstOrDefault(p => p.Name == programName);
+                if (program != null)
                 {
-                    string programName = selected.Substring(2); 
-                    var program = filteredPrograms?.FirstOrDefault(p => p.Name == programName);
-                    if (program != null)
-                    {
-                        ShowProgramDetails(program);
-                        return;
-                    }
+                    ShowProgramDetails(program);
+                    return;
                 }
+            }
 
-                int index = listBox1.SelectedIndex;
-                if (index > 0 && listBox1.Items[index - 1].ToString().StartsWith("📦"))
+            if (selected.StartsWith("   "))
+            {
+                for (int i = listBox1.SelectedIndex - 1; i >= 0; i--)
                 {
-                    string programName = listBox1.Items[index - 1].ToString().Substring(2);
-                    var program = filteredPrograms?.FirstOrDefault(p => p.Name == programName);
-                    if (program != null)
+                    string item = listBox1.Items[i].ToString();
+                    if (item.StartsWith("📦"))
                     {
-                        ShowProgramDetails(program);
+                        string programName = item.Substring(2).Trim();
+                        var program = filteredPrograms.FirstOrDefault(p => p.Name == programName);
+                        if (program != null)
+                        {
+                            ShowProgramDetails(program);
+                            return;
+                        }
+                        break;
                     }
                 }
             }
@@ -339,10 +345,13 @@ namespace SystemMonitor
                 $"╚════════════════════════════════════════╝";
         }
 
-
         private void ProgramsForm_Load(object sender, EventArgs e)
         {
-
+            groupBox1.Text = "📋 Інформація про програму";
+            btnSearch.Text = "🔍 Пошук";
+            btnRefresh.Text = "🔄 Оновити";
+            btnUninstall.Text = "🧨 Видалити програму";
+            this.Text = "📦 Менеджер програм";
         }
 
         private void btnSearch_Click_1(object sender, EventArgs e)
@@ -370,67 +379,72 @@ namespace SystemMonitor
 
         private void btnUninstall_Click_1(object sender, EventArgs e)
         {
-            if (listBox1.SelectedIndex >= 0)
-            {
-                ProgramInfo selectedProgram = null;
-
-                int index = listBox1.SelectedIndex;
-                for (int i = index; i >= 0; i--)
-                {
-                    string item = listBox1.Items[i].ToString();
-                    if (item.StartsWith("📦"))
-                    {
-                        string programName = item.Substring(2);
-                        selectedProgram = filteredPrograms?.FirstOrDefault(p => p.Name == programName);
-                        break;
-                    }
-                }
-
-                if (selectedProgram != null)
-                {
-                    var result = MessageBox.Show(
-                        $"Ви ДІЙСНО хочете видалити програму?\n\n" +
-                        $"📦 Програма: {selectedProgram.Name}\n" +
-                        $"🔢 Версія: {selectedProgram.Version}\n" +
-                        $"🏢 Видавець: {selectedProgram.Publisher}\n\n" +
-                        $"⚠️ Увага! Цю дію НЕ МОЖНА буде скасувати!",
-                        "🧨 Підтвердження видалення програми",
-                        MessageBoxButtons.YesNo,
-                        MessageBoxIcon.Warning,
-                        MessageBoxDefaultButton.Button2);
-
-                    if (result == DialogResult.Yes)
-                    {
-                        try
-                        {
-                            if (!string.IsNullOrEmpty(selectedProgram.UninstallString))
-                            {
-                                Process.Start("cmd.exe", $"/c {selectedProgram.UninstallString}");
-                                MessageBox.Show($"✅ Запущено деінсталятор для {selectedProgram.Name}\n\nПісля видалення натисніть 'Оновити'.",
-                                    "Інформація", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            }
-                            else
-                            {
-                                MessageBox.Show("❌ Не вдалося знайти деінсталятор для цієї програми.",
-                                    "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show($"❌ Помилка: {ex.Message}",
-                                "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                    }
-                }
-            }
-            else
+            if (listBox1.SelectedIndex < 0)
             {
                 MessageBox.Show("Будь ласка, виберіть програму зі списку!",
                     "Попередження", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            ProgramInfo selectedProgram = null;
+
+            for (int i = listBox1.SelectedIndex; i >= 0; i--)
+            {
+                string item = listBox1.Items[i].ToString();
+                if (item.StartsWith("📦"))
+                {
+                    string programName = item.Substring(2).Trim();
+                    selectedProgram = filteredPrograms?.FirstOrDefault(p => p.Name == programName);
+                    break;
+                }
+            }
+
+            if (selectedProgram == null)
+            {
+                MessageBox.Show("Не вдалося знайти вибрану програму.",
+                    "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(selectedProgram.UninstallString))
+            {
+                MessageBox.Show("Для цієї програми не знайдено деінсталятор.",
+                    "Інформація", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var result = MessageBox.Show(
+                $"Ви ДІЙСНО хочете видалити програму?\n\n" +
+                $"📦 Програма: {selectedProgram.Name}\n" +
+                $"🔢 Версія: {selectedProgram.Version}\n" +
+                $"🏢 Видавець: {selectedProgram.Publisher}\n\n" +
+                $"⚠️ Увага! Цю дію НЕ МОЖНА буде скасувати!",
+                "🧨 Підтвердження видалення програми",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning,
+                MessageBoxDefaultButton.Button2);
+
+            if (result != DialogResult.Yes) return;
+
+            try
+            {
+                Process.Start("cmd.exe", $"/c {selectedProgram.UninstallString}");
+                MessageBox.Show($"✅ Запущено деінсталятор для {selectedProgram.Name}\n\n" +
+                    "Після видалення натисніть 'Оновити'.",
+                    "Інформація", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"❌ Помилка: {ex.Message}",
+                    "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-    }
 
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+        }
+    }
 
     public class ProgramInfo
     {
